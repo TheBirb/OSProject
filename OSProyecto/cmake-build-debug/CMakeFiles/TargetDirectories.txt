@@ -1,0 +1,3 @@
+/Users/jonmorinigo/github/OSProject/OSProject/OSProyecto/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/jonmorinigo/github/OSProject/OSProject/OSProyecto/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/jonmorinigo/github/OSProject/OSProject/OSProyecto/cmake-build-debug/CMakeFiles/OSProyecto.dir

@@ -11,13 +11,18 @@
 
 //hay que tener un PCB en 0, para que cuando un hilo este vacío
 int cf=0;
+int pid =1;
 CPU *CpuList;
 pcq *pcqxCPU;
 pthread_mutex_t lock;
 pthread_cond_t condP;
 pthread_cond_t condS;
+pthread_cond_t condD;
 pthread_cond_t sigT;
-int times[] = {2,3};
+int times[] = {2,3,4};
+int cpus, cores, hilos;
+struct PCB pcb0;
+struct pcq processQ;
 void *clk(){
     while(1){
         cf++;
@@ -28,25 +33,37 @@ void *clk(){
 }
 void *timer(int index){
     //index=0 => processGen
-    //index=1 => process
+    //index=1 => sheduler
+    //index=2 => dispatcher
     int tiempo= times[index];
-    int done=0;
+    int d1=0;
+    int d2=0;
+    int d3=0;
     if(index==0){
         while(1){
             pthread_cond_wait(&sigT, &lock);
-            done++;
-            if(done==tiempo){
+            d1++;
+            if(d1==tiempo){
                 pthread_cond_signal(&condP);
-                done=0;
+                d1=0;
+            }
+        }
+    }else if(index==1){
+        while(1){
+            pthread_cond_wait(&sigT, &lock);
+            d2++;
+            if(d2==tiempo){
+                pthread_cond_signal(&condS);
+                d2=0;
             }
         }
     }else{
         while(1){
             pthread_cond_wait(&sigT, &lock);
-            done++;
-            if(done==tiempo){
-                pthread_cond_signal(&condS);
-                done=0;
+            d3++;
+            if(d3==tiempo){
+                pthread_cond_signal(&condD);
+                d3=0;
             }
         }
     }
@@ -54,10 +71,11 @@ void *timer(int index){
 
 }
 void *processGen(){
+    int ttl;
     while(1){
         pthread_cond_wait(&condP, &lock);
         printf("TrabajandoGenProc, %d\n",cf);
-        sleep(3);
+
     }
 }
 void *scheduler(){
@@ -67,9 +85,33 @@ void *scheduler(){
         sleep(2);
     }
 }
-int main(){
-    int cpus, cores, hilos;
+void *dispatcher(){
     int i,j,k;
+    while(1){
+        pthread_cond_wait(&condD, &lock);
+        //miramos cola de ready
+        printf("TrabajandoDispatcher, %d\n", cf);
+        for(i=0; i<cpus; i++){
+            for(j=0; j<cores; j++){
+                for(k=0; k<cores; k++){
+                   if(CpuList[i].core[j].hilos[k].MyProc->pid==0){
+                       //vacio procesamos lista de ready
+                   }else{
+                       if(CpuList[i].core[j].hilos[k].MyProc->ttl==0){
+                           CpuList[i].core[j].hilos[k].MyProc->pid=0;
+                       }else{
+                           CpuList[i].core[j].hilos[k].MyProc->ttl--;
+                       }
+                   }
+                }
+            }
+        }
+    }
+
+}
+int main(){
+    int i,j,k;
+    pcb0.pid=0;
     printf("Cuantos CPU\n");
     scanf("%d", &cpus);
     printf("Cuantos Cores por CPU: \n");
@@ -87,22 +129,26 @@ int main(){
             CpuList[i].core[j].hilos = (hilo*) malloc(hilos * sizeof(hilo));
             for (k = 0; k < hilos; k++) {
                 struct hilo hilo;
+                hilo.MyProc=&pcb0;
                 CpuList[i].core[j].hilos[k] = hilo;
+
             }
         }
     }
 
-    pthread_t tid[5];
+    pthread_t tid[6];
     pthread_create(&tid[0], NULL, clk, NULL);
     pthread_create(&tid[1], NULL,processGen, NULL);
-    pthread_create(&tid[2], NULL, scheduler, NULL);
-    pthread_create(&tid[3], NULL, timer(0), NULL);
-    pthread_create(&tid[4], NULL, timer(1), NULL);
+    pthread_create(&tid[2], NULL,scheduler, NULL);
+    pthread_create(&tid[3], NULL,dispatcher, NULL);
+    pthread_create(&tid[4], NULL, timer(0), NULL);
+    pthread_create(&tid[5], NULL, timer(1), NULL);
     pthread_join(tid[0],NULL);
     pthread_join(tid[1],NULL);
     pthread_join(tid[2],NULL);
     pthread_join(tid[3],NULL);
     pthread_join(tid[4],NULL);
+    pthread_join(tid[5],NULL);
     return 0;
 }
 

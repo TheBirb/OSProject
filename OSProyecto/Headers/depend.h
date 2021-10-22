@@ -14,6 +14,7 @@ struct PCB{
 };
 typedef struct PCB PCB;
 struct pcq{
+    int max;
     int count;
     PCB *inicio;
     PCB *final;

@@ -19,4 +19,6 @@ unistd.h
 -
 ../Headers/depend.h
 /Users/jonmorinigo/github/OSProject/OSProject/OSProyecto/Headers/depend.h
+semaphore.h
+-
 

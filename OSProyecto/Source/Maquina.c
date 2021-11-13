@@ -61,7 +61,7 @@ PCB *atomicQueue(int type, pcq *cola, PCB *pcb){
     sem_post(&semQ);
     return(npcb);
 }
-
+//---------------------------------------
 void *clk(){
     int i,j,k;
     while(1){

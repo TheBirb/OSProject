@@ -32,6 +32,54 @@ int nhejec=0;
 //para control de timers
 int done=0;
 
+void red () {
+    printf("\033[1;31m");
+}
+void yellow () {
+    printf("\033[0;33m");
+}
+void green () {
+    printf("\033[0;32m");
+}
+void reset () {
+    printf("\033[0m");
+}
+
+void print_machine(){
+    int i,j,k;
+    char lines[1024];
+
+    strcpy(lines,"-------");
+    printf("       ");
+    for (i = 0; i < cpus; i++)
+    {
+        printf("|     cpu%02d    ",i);
+        strcat(lines,"---------------");
+    }
+    printf("|\n%s-\n",lines);
+    for (j = 0; j < cores; j++)
+    {
+        for (k = 0; k < hilos; k++){
+            printf("core%02d |",j);
+            for (i = 0; i < cpus; i++)
+            {
+                PCB *act_pcb=CpuList[i].core[j].hilos[k].MyProc;
+                red();
+                printf(" %04d",act_pcb->pid);
+                green();
+                printf(" %03d",act_pcb->ttl);
+                yellow();
+                printf(" %03d",act_pcb->prioridad);
+                reset();
+                printf(" |");
+            }
+            printf("\n");
+
+        }
+        printf("%s-\n",lines);
+    }
+    /*print_ready_lists();*/
+}
 
 /**
  * Funcion para añadir un proceso a una cola determinada del RTC
@@ -58,7 +106,7 @@ void pushQ(PCB *pcb, int prioridad){
  * @param prioridad indice de la cola
  * @return proceso con la prioridad seleccionada
  */
-PCB pullQ(int prioridad){
+PCB *pullQ(int prioridad){
     PCB *pcb = realTimeClass.pQ[prioridad]->inicio;
     if(realTimeClass.pQ[prioridad]->count==1){
         realTimeClass.pQ[prioridad]->inicio=NULL;
@@ -69,7 +117,7 @@ PCB pullQ(int prioridad){
     }
     realTimeClass.pQ[prioridad]->count--;
     realTimeClass.count--;
-    return(*pcb);
+    return(pcb);
 }
 
 
@@ -81,7 +129,6 @@ void *clk() {
 
     int i, j, k;
     while (1) {
-        printf("Soy el clk\n");
         pthread_mutex_lock(&clkm);
         cf++;
         printf("Clock %d\n", cf);
@@ -116,10 +163,10 @@ void *clk() {
                 }
             }
         }
+        print_machine();
         pthread_mutex_unlock( &locka );
         done=0;
         sleep(1);
-        printf("N procesos: %d\n", nhejec);
         pthread_cond_broadcast(&broadcast);
         pthread_mutex_unlock(&clkm);
     }
@@ -130,7 +177,6 @@ void *clk() {
  * Generador de procesos
  */
 void processGen(){
-    printf("soy PG\n");
     PCB *npcb = (PCB*)malloc(sizeof(struct PCB));
     npcb->pid = PID;
     PID++;
@@ -142,7 +188,6 @@ void processGen(){
     npcb->prioridad= prio;
     npcb->quantum=10;
     if(realTimeClass.pQ[npcb->prioridad]->count<MAX){
-        printf("prioridad del push :  %d \n", prio);
         pushQ( npcb, npcb->prioridad);
     }else{
         PID--;
@@ -177,12 +222,10 @@ void *timer1(){
  * Scheduler con política RTC
  * @return
  */
-void *scheduler(){printf("soy SC\n");
+void *scheduler(){
     int i,j,k,l;
     int index=0;
-    printf("hola-1\n");
     if(realTimeClass.count>0){
-        printf("hola\n");
         for(i=0; i<cpus; i++){
             for(j=0; j<cores; j++){
                 for(k=0; k<hilos; k++){
@@ -190,12 +233,9 @@ void *scheduler(){printf("soy SC\n");
 
                         for (l = index; l < 100; l++) {
                             if (realTimeClass.bitmap[l] == 1) {
-                                printf("Meto[%d] \n", l);
-                               PCB process = pullQ(l);
-                                printf("[%d][%d][%d]\n",i,j,k);
-                                process.quantumRestante=process.quantum;
-                                CpuList[i].core[j].hilos[k].MyProc=&process;
-                                printf("Meto[%d] 2\n", l);
+                               PCB *process = pullQ(l);
+                                process->quantumRestante=process->quantum;
+                                CpuList[i].core[j].hilos[k].MyProc=process;
                                 nhejec++;
                                 index=l;
                                 break;

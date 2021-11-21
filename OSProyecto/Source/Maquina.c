@@ -97,7 +97,7 @@ void *clk() {
         }
         for (i = 0; i < cpus; i++) {
             for (j = 0; j < cores; j++) {
-                for (k = 0; k < cores; k++) {
+                for (k = 0; k < hilos; k++) {
                     if (CpuList[i].core[j].hilos[k].MyProc->pid != 0) {
                         if (CpuList[i].core[j].hilos[k].MyProc->ttl == 0) {
                             CpuList[i].core[j].hilos[k].MyProc->pid = 0;

@@ -52,6 +52,7 @@ void *pushQ(PCB *pcb, int prioridad){
     realTimeClass.pQ[prioridad]->final = pcb;
     realTimeClass.pQ[prioridad]->count++;
     realTimeClass.count++;
+    return 0;
 }
 
 
@@ -204,6 +205,7 @@ void *scheduler(){
             }
         }
     }
+    return 0;
 }
 
 

@@ -39,8 +39,8 @@ int done=0;
  * @param prioridad indice de la cola deseada
  * @return
  */
-void *pushQ(PCB *pcb, int prioridad){
-    printf("prioridad del push :  %d \n", prioridad);
+void pushQ(PCB *pcb, int prioridad){
+
     if(realTimeClass.pQ[prioridad]->count==0){
         realTimeClass.pQ[prioridad]->inicio = pcb;
         realTimeClass.bitmap[prioridad]=1;
@@ -50,8 +50,6 @@ void *pushQ(PCB *pcb, int prioridad){
     realTimeClass.pQ[prioridad]->final = pcb;
     realTimeClass.pQ[prioridad]->count++;
     realTimeClass.count++;
-
-    return 0;
 }
 
 
@@ -60,7 +58,7 @@ void *pushQ(PCB *pcb, int prioridad){
  * @param prioridad indice de la cola
  * @return proceso con la prioridad seleccionada
  */
-PCB *pullQ(int prioridad){
+PCB pullQ(int prioridad){
     PCB *pcb = realTimeClass.pQ[prioridad]->inicio;
     if(realTimeClass.pQ[prioridad]->count==1){
         realTimeClass.pQ[prioridad]->inicio=NULL;
@@ -71,7 +69,7 @@ PCB *pullQ(int prioridad){
     }
     realTimeClass.pQ[prioridad]->count--;
     realTimeClass.count--;
-    return(pcb);
+    return(*pcb);
 }
 
 
@@ -80,8 +78,10 @@ PCB *pullQ(int prioridad){
  * @return
  */
 void *clk() {
+
     int i, j, k;
     while (1) {
+        printf("Soy el clk\n");
         pthread_mutex_lock(&clkm);
         cf++;
         printf("Clock %d\n", cf);
@@ -141,8 +141,8 @@ void processGen(){
     }
     npcb->prioridad= prio;
     npcb->quantum=10;
-    printf("prio %d \n", prio);
     if(realTimeClass.pQ[npcb->prioridad]->count<MAX){
+        printf("prioridad del push :  %d \n", prio);
         pushQ( npcb, npcb->prioridad);
     }else{
         PID--;
@@ -188,12 +188,14 @@ void *scheduler(){printf("soy SC\n");
                 for(k=0; k<hilos; k++){
                     if(CpuList[i].core[j].hilos[k].MyProc->pid==0){
 
-                        for (l = index; l < 100; ++l) {
+                        for (l = index; l < 100; l++) {
                             if (realTimeClass.bitmap[l] == 1) {
-                                printf("Meto[%d]\n", l);
-                               PCB *process = pullQ(l);
-                                process->quantumRestante=process->quantum;
-                                CpuList[i].core[j].hilos[k].MyProc=process;
+                                printf("Meto[%d] \n", l);
+                               PCB process = pullQ(l);
+                                printf("[%d][%d][%d]\n",i,j,k);
+                                process.quantumRestante=process.quantum;
+                                CpuList[i].core[j].hilos[k].MyProc=&process;
+                                printf("Meto[%d] 2\n", l);
                                 nhejec++;
                                 index=l;
                                 break;

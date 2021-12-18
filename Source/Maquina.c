@@ -229,8 +229,7 @@ void *scheduler(){
         for(i=0; i<cpus; i++){
             for(j=0; j<cores; j++){
                 for(k=0; k<hilos; k++){
-                    if(CpuList[i].core[j].hilos[k].MyProc->pid==0){
-
+                    if(CpuList[i].core[j].hilos[k].MyProc->pid==0){º
                         for (l = index; l < 100; l++) {
                             if (realTimeClass.bitmap[l] == 1) {
                                PCB *process = pullQ(l);
@@ -273,14 +272,25 @@ void *timer2(){
 }
 
 
-int main() {
+int main(int argc, char *argv[]) {
     int i, j, k;
-    printf("Cuantos CPU\n");
-    scanf("%d", &cpus);
-    printf("Cuantos Cores por CPU: \n");
-    scanf("%d", &cores);
-    printf("Cuantas hilos por Core: \n");
-    scanf("%d", &hilos);
+    if(argc!=4){
+        exit(1);
+    }
+    char *p;
+    long conv = strtol(argv[1], &p, 10);
+    cpus=(int)conv;
+    conv = strtol(argv[2], &p, 10);
+    cores=(int)conv;
+    conv = strtol(argv[3], &p, 10);
+    hilos=(int)conv;
+    printf("%d %d %d \n", cpus, cores, hilos);
+   // printf("Cuantos CPU\n");
+   // scanf("%d", &cpus);
+  //  printf("Cuantos Cores por CPU: \n");
+  //  scanf("%d", &cores);
+  //  printf("Cuantas hilos por Core: \n");
+  //  scanf("%d", &hilos);
     //INICIALIZACIÓN DE LA ESTRUCTURA DE LA MAQUINA
     CpuList = (CPU *) malloc(cpus * sizeof(CPU));
     for (i = 0; i < cpus; i++) {

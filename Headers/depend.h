@@ -43,7 +43,7 @@ typedef struct CPU CPU;
 
 
 struct RTC{
-    pcq *pQ[99];
+    pcq *pQ[100];
     int *bitmap;
     int count;
 };

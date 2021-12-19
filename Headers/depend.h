@@ -1,11 +1,12 @@
-//
-// Created by Jon Moríñigo on 7/10/21.
-//
-
 #ifndef OS_DEPEND_H
 #define OS_DEPEND_H
 #endif //OS_DEPEND_H
-
+struct mm{
+    int code;
+    int data;
+    int *pgb;
+}
+typedef struct mm mm;
 
 struct PCB{
     int pid;
@@ -13,11 +14,14 @@ struct PCB{
     int prioridad;
     int quantum;
     int quantumRestante;
+    struct mm mm;
     struct PCB *next;
 };
 typedef struct PCB PCB;
-//LA RUNQUEUE TENEMOS QUE PONER CUANTOS QUEREMOS MAX EN TODA LA RUNQUEUE
-
+struct PM{
+    int FF; //byte array de espacios libres
+    int *PM;
+}
 struct pcq{
     int max;
     int count;
@@ -28,6 +32,10 @@ typedef struct pcq pcq;
 
 struct hilo{
     PCB *MyProc;
+    int RI;  //registro de instruccion
+    int *REG16; //array de 16 registros
+    int *PTBR;
+    int *TLB; //6 ENTRADAS DE TRADUCCION
 };
 typedef struct hilo hilo;
 
@@ -41,7 +49,12 @@ struct CPU{
 };
 typedef struct CPU CPU;
 
-
+struct TLBentry{
+    int PID;
+    char *virtual;
+    int fisica;
+};
+typedef struct TLBentry TLBentry;
 struct RTC{
     pcq *pQ[100];
     int *bitmap;

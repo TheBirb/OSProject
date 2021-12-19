@@ -119,8 +119,9 @@ PCB *pullQ(int prioridad){
     realTimeClass.count--;
     return(pcb);
 }
+int realizarOperacion(PCB pcb, TLBentry *TLB){
 
-
+}
 /**
  * Programa para simular el clock de la maquina
  * @return
@@ -140,24 +141,15 @@ void *clk() {
             for (j = 0; j < cores; j++) {
                 for (k = 0; k < hilos; k++) {
                     if (CpuList[i].core[j].hilos[k].MyProc->pid != 0) {
-                        if (CpuList[i].core[j].hilos[k].MyProc->ttl == 0) {
+                        if(CpuList[i].core[j].hilos[k].MyProc->quantumRestante==0){
+                            pushQ(CpuList[i].core[j].hilos[k].MyProc, CpuList[i].core[j].hilos[k].MyProc->prioridad);
                             PCB *pcb=(PCB*)malloc(sizeof(struct PCB));
                             pcb->pid=0;
                             CpuList[i].core[j].hilos[k].MyProc=pcb;
                             nhejec--;
-                        } else {
-                            if(CpuList[i].core[j].hilos[k].MyProc->quantumRestante==0){
-                                pushQ(CpuList[i].core[j].hilos[k].MyProc, CpuList[i].core[j].hilos[k].MyProc->prioridad);
-                                PCB *pcb=(PCB*)malloc(sizeof(struct PCB));
-                                pcb->pid=0;
-                                CpuList[i].core[j].hilos[k].MyProc=pcb;
-
-                                nhejec--;
-                            }else{
-                                CpuList[i].core[j].hilos[k].MyProc->quantumRestante--;
-                                CpuList[i].core[j].hilos[k].MyProc->ttl--;
-                            }
-
+                        }else{
+                            realizarOperacion(CpuList[i].core[j].hilos[k].MyProc,CpuList[i].core[j].hilos[k].TLB);
+                            CpuList[i].core[j].hilos[k].MyProc->quantumRestante--;
                         }
                     }
                 }
@@ -180,7 +172,6 @@ void processGen(){
     PCB *npcb = (PCB*)malloc(sizeof(struct PCB));
     npcb->pid = PID;
     PID++;
-    npcb->ttl=rand() % 300;
     int prio =rand() % 99;
     if (prio==0){
         prio=1;
@@ -306,6 +297,8 @@ int main(int argc, char *argv[]) {
                 pcb->pid=0;
                 struct hilo hilo;
                 hilo.MyProc = pcb;
+                hilo.REG16= (int*)malloc(sizeof(int)*16);
+                hilo.TLB= (TLBentry*)malloc(sizeof(TLBentry)*6); //6 entradas de TLB
                 CpuList[i].core[j].hilos[k] = hilo;
             }
         }

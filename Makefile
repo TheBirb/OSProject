@@ -1,4 +1,4 @@
-HEADERS= Headers/depend.h
+HEADERS= Headers/depend.h Headers/defines.h
 Default: Maquina
 
 Maquina.o: Source/Maquina.c $(HEADERS)

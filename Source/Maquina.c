@@ -144,6 +144,7 @@ void *clk() {
                 for (k = 0; k < hilos; k++) {
                     if (CpuList[i].core[j].hilos[k].MyProc->pid != 0) {
                         if(CpuList[i].core[j].hilos[k].MyProc->quantumRestante==0){
+                            CpuList[i].core[j].hilos[k].MyProc->quantumRestante=10;
                             CpuList[i].core[j].hilos[k].MyProc->PC= CpuList[i].core[j].hilos[k].PC;
                             CpuList[i].core[j].hilos[k].MyProc->REG16=CpuList[i].core[j].hilos[k].REG16;
                             pushQ(CpuList[i].core[j].hilos[k].MyProc, CpuList[i].core[j].hilos[k].MyProc->prioridad);
@@ -152,6 +153,7 @@ void *clk() {
                             pcb->PC=0;
                             pcb->prioridad=0;
                             CpuList[i].core[j].hilos[k].MyProc=pcb;
+                            CpuList[i].core[j].hilos[k].PC=0;
                             nhejec--;
                         }else{
                             d_fisica=-1;
@@ -266,8 +268,11 @@ void *clk() {
                                 }
                             }
                         }
-                        CpuList[i].core[j].hilos[k].PC++;
-                        CpuList[i].core[j].hilos[k].MyProc->quantumRestante--;
+                        if(op!=15){
+                            CpuList[i].core[j].hilos[k].PC++;
+                            CpuList[i].core[j].hilos[k].MyProc->PC++;
+                            CpuList[i].core[j].hilos[k].MyProc->quantumRestante--;
+                        }
                     }
                 }
             }
@@ -294,8 +299,10 @@ void loader(){
     //Antes de nada comprobamos que hay programas generados
     if((fd = fopen("prog000.elf", "r"))==NULL){
         genNewProcesses();
+    }else {
+        fclose(fd);
     }
-    struct TLBe tlbs[NUMBLOCK];
+    struct TLBe *tlbs = malloc(sizeof(struct TLBe) * NUMBLOCK );
     npcb = (PCB*)malloc(sizeof(struct PCB));
     npcb->mm = malloc(sizeof(struct mm));
     npcb->mm->pgb = tlbs;
@@ -427,6 +434,7 @@ void loader(){
     }else{
         PID--;
     }
+
     fclose(fd);
 }
 /**
@@ -547,7 +555,7 @@ void print_machine(){
                 red();
                 printf(" %04d",act_pcb->pid);
                 green();
-                printf(" %03d",CpuList[i].core[j].hilos[k].PC);
+                printf(" %03d",act_pcb->PC);
                 yellow();
                 printf(" %03d",act_pcb->prioridad);
                 reset();
@@ -623,7 +631,6 @@ int genNewProcesses(){
         code_start = conf.user_lowest;
         code_size  = (((rand() % conf.max_lines) >> 2) << 2) + 4 + 1; // Al menos un grupo instrucciones
         data_start = code_start + (code_size << 2);
-        printf("%d\n", data_start);
         data_size  = (rand() % conf.max_lines) + 3; // Al menos 3 datos
 
         sprintf(line,".text %06X\n", code_start);
